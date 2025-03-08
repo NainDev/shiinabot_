@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Redemption Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1015&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        
+        .fixed-center {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .btn-purple {
+            background-color: #8B5CF6;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-purple:hover {
+            background-color: #7C3AED;
+            transform: translateY(-2px);
+        }
+        
+        .reward-card {
+            border-left: 4px solid #8B5CF6;
+            transition: all 0.3s ease;
+        }
+        
+        .reward-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .invoice-container {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 2rem;
+            border-radius: 0.5rem;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+    
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div id="main-content" class="fixed-center card rounded-lg shadow-lg w-full overflow-hidden">
+        <!-- Code Redemption Form -->
+        <div id="redemption-form" class="relative">
+            <div class="bg-purple-600 py-4 px-6">
+                <h1 class="text-white font-bold text-xl text-center">Portal Penukaran Kode</h1>
+            </div>
+            
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Tukarkan Kode Anda 🎮</h2>
+                <p class="text-gray-600 mb-6 text-center">Masukkan kode untuk mendapatkan hadiah menarik</p>
+                
+                <form id="codeForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Kode Hadiah</label>
+                        <input type="text" name="code" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Masukkan kode hadiah Anda">
+                    </div>
+        
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Nama Lengkap</label>
+                        <input type="text" name="fullName" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Masukkan nama lengkap Anda">
+                    </div>
+        
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Email</label>
+                        <input type="email" name="email" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Masukkan email Anda">
+                    </div>
+        
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Nomor WhatsApp</label>
+                        <input type="tel" name="whatsapp" required
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Masukkan nomor WhatsApp Anda">
+                    </div>
+
+                    <!-- Info Buttons -->
+                    <div class="flex justify-between px-4 py-2">
+                        <button type="button" onclick="showRewardsInfo()" class="text-purple-600 underline text-sm">
+                            Lihat Hadiah
+                        </button>
+                        <button type="button" onclick="showPrivacyPolicy()" class="text-purple-600 underline text-sm">
+                            Kebijakan Privasi
+                        </button>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full btn-purple text-white py-3 px-4 rounded-lg shadow-md font-semibold">
+                        Tukar Kode
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Success Result -->
+        <div id="success-result" class="hidden">
+            <div class="bg-purple-600 py-4 px-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-white font-bold text-xl">Kode Berhasil Ditukarkan!</h1>
+                    <button onclick="downloadInvoice()" class="bg-white text-purple-600 px-3 py-1 rounded text-sm font-semibold">
+                        Unduh Invoice
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-8">
+                <div class="mb-6 text-center">
+                    <div class="inline-block p-3 bg-green-100 rounded-full mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Selamat!</h2>
+                    <p class="text-gray-600">Kode Anda telah berhasil ditukarkan</p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <h3 class="font-semibold text-lg text-gray-800">Hadiah Anda:</h3>
+                    <div class="reward-card bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-medium text-purple-700">Premium Membership</h4>
+                        <p class="text-gray-600 text-sm">7 hari masa aktif sewa Bot secara GRATIS</p>
+                    </div>
+                    <div class="reward-card bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-medium text-purple-700">Balance Credit</h4>
+                        <p class="text-gray-600 text-sm">50,000 Balance, dikirim otomatis ke akun Anda</p>
+                    </div>
+                    <div class="reward-card bg-white p-4 rounded-lg shadow">
+                        <h4 class="font-medium text-purple-700">Limit Harian</h4>
+                        <p class="text-gray-600 text-sm">100 transaksi per hari</p>
+                    </div>
+                </div>
+                
+                <div id="code-info" class="bg-purple-50 p-4 rounded-lg mb-6 border border-purple-200">
+                    <p class="text-purple-800 text-sm font-medium mb-1">Kode Anda:</p>
+                    <p class="bg-white p-2 rounded border border-purple-200 text-center font-mono text-purple-800 font-semibold" id="redeemed-code">XXXXX-XXXXX-XXXXX</p>
+                    <p class="text-purple-800 text-sm mt-2">Simpan kode ini sebagai bukti penukaran.</p>
+                </div>
+                
+                <button onclick="backToForm()" class="w-full btn-purple text-white py-3 px-4 rounded-lg shadow-md font-semibold">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+
+        <!-- Invoice Template (Hidden) -->
+        <div id="invoice-template" class="hidden">
+            <div class="invoice-container">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">INVOICE</h1>
+                        <p class="text-gray-600 text-sm">Penukaran Kode Hadiah</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-purple-700 font-semibold" id="invoice-date"></p>
+                        <p class="text-gray-600 text-sm" id="invoice-number"></p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between mb-8">
+                    <div>
+                        <p class="text-gray-600 text-sm mb-1">Penerima:</p>
+                        <p class="font-medium" id="invoice-name"></p>
+                        <p class="text-gray-600 text-sm" id="invoice-email"></p>
+                        <p class="text-gray-600 text-sm" id="invoice-whatsapp"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-gray-600 text-sm mb-1">Status:</p>
+                        <p class="font-semibold text-green-600">SUKSES</p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-b border-gray-200 py-4 mb-6">
+                    <div class="font-medium mb-2">Detail Penukaran</div>
+                    <div class="flex justify-between items-center py-2">
+                        <div>
+                            <p class="font-medium">Kode Hadiah</p>
+                            <p class="text-gray-600 text-sm" id="invoice-code"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium text-purple-700">Berhasil</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <div class="font-medium mb-3">Hadiah Diterima:</div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <p>Premium Membership (7 hari)</p>
+                            <p class="font-medium">Aktif</p>
+                        </div>
+                        <div class="flex justify-between">
+                            <p>Balance Credit</p>
+                            <p class="font-medium">50,000</p>
+                        </div>
+                        <div class="flex justify-between">
+                            <p>Limit Harian</p>
+                            <p class="font-medium">100/hari</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center text-gray-600 text-sm">
+                    <p>Terima kasih telah menggunakan layanan kami.</p>
+                    <p>Untuk pertanyaan, hubungi support@contoh.com</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popups -->
+        <div id="rewards-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Daftar Hadiah 🎁</h3>
+                    <button onclick="closePopup('rewards-popup')" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">7 Hari Premium Gratis</h4>
+                            <p class="text-gray-600 text-sm">Masa aktif sewa Bot secara GRATIS selama 7 hari penuh.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">50,000 Balance</h4>
+                            <p class="text-gray-600 text-sm">Balance dikirim ke akun secara otomatis setiap bulan.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Limit 100/Hari</h4>
+                            <p class="text-gray-600 text-sm">Limit transaksi hingga 100 per hari untuk akun premium.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Informasi Realtime</h4>
+                            <p class="text-gray-600 text-sm">Dapatkan informasi terbaru khusus untuk pengguna terverifikasi.</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closePopup('rewards-popup')" class="w-full btn-purple text-white py-2 px-4 rounded-lg font-medium">
+                    Tutup
+                </button>
+            </div>
+        </div>
+        
+        <div id="privacy-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Kebijakan Privasi</h3>
+                    <button onclick="closePopup('privacy-popup')" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-3 mb-6 text-gray-600 text-sm">
+                    <p class="font-medium text-gray-800">Kami menghargai privasi Anda. Berikut cara kami melindungi data Anda:</p>
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li>Data Anda akan kami simpan dengan aman menggunakan teknologi enkripsi.</li>
+                        <li>Kami tidak akan membagikan informasi pribadi Anda kepada pihak ketiga tanpa persetujuan Anda.</li>
+                        <li>Data yang dikumpulkan hanya digunakan untuk keperluan verifikasi dan penukaran kode.</li>
+                        <li>Anda dapat meminta penghapusan data pribadi kapan saja melalui kontak support.</li>
+                        <li>Kami menggunakan teknologi keamanan terkini untuk melindungi informasi Anda dari akses tidak sah.</li>
+                    </ol>
+                </div>
+                <button onclick="closePopup('privacy-popup')" class="w-full btn-purple text-white py-2 px-4 rounded-lg font-medium">
+                    Saya Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // DOM Elements
+    const codeForm = document.getElementById('codeForm');
+    const redemptionForm = document.getElementById('redemption-form');
+    const successResult = document.getElementById('success-result');
+    const invoiceTemplate = document.getElementById('invoice-template');
+    
+    // Form submission handler
+    codeForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const formData = new FormData(codeForm);
+        const code = formData.get('code');
+        const fullName = formData.get('fullName');
+        const email = formData.get('email');
+        const whatsapp = formData.get('whatsapp');
+        
+        // Generate random transaction ID
+        const transactionId = generateTransactionId();
+        
+        // Update success screen with values
+        document.getElementById('redeemed-code').textContent = code;
+        
+        // Update invoice template
+        document.getElementById('invoice-date').textContent = formatDate(new Date());
+        document.getElementById('invoice-number').textContent = `INV-${transactionId}`;
+        document.getElementById('invoice-name').textContent = fullName;
+        document.getElementById('invoice-email').textContent = email;
+        document.getElementById('invoice-whatsapp').textContent = whatsapp;
+        document.getElementById('invoice-code').textContent = code;
+        
+        // Show success screen
+        redemptionForm.classList.add('hidden');
+        successResult.classList.remove('hidden');
+    });
+    
+    // Helper functions
+    function showRewardsInfo() {
+        document.getElementById('rewards-popup').classList.remove('hidden');
+    }
+    
+    function showPrivacyPolicy() {
+        document.getElementById('privacy-popup').classList.remove('hidden');
+    }
+    
+    function closePopup(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+    
+    function backToForm() {
+        successResult.classList.add('hidden');
+        redemptionForm.classList.remove('hidden');
+        codeForm.reset();
+    }
+    
+    function generateTransactionId() {
+        return Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+    
+    function formatDate(date) {
+        const options = { day: '2-digit', month: 'long', year: 'numeric' };
+        return date.toLocaleDateString('id-ID', options);
+    }
+    
+    function downloadInvoice() {
+        const { jsPDF } = window.jspdf;
+        
+        // Create a clone of the invoice to modify for PDF generation
+        const invoiceClone = invoiceTemplate.cloneNode(true);
+        invoiceClone.classList.remove('hidden');
+        document.body.appendChild(invoiceClone);
+        
+        // Generate PDF
+        html2canvas(invoiceClone.querySelector('.invoice-container'), {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save(`invoice-${document.getElementById('invoice-number').textContent}.pdf`);
+            
+            // Remove the clone after generating PDF
+            document.body.removeChild(invoiceClone);
+        });
+    }
+    
+    // Generate random codes for the demo
+    const generateRandomCode = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 15; i++) {
+            if (i > 0 && i % 5 === 0) result += '-';
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    };
+    
+    // Pre-fill with a random code for demo purposes
+    document.querySelector('input[name="code"]').value = generateRandomCode();
+</script>
+
+</body>
+</html>
